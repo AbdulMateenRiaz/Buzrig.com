@@ -1,0 +1,432 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Multi-tenant Organization ───────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  plan      Plan     @default(STARTUP)
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   OrgMember[]
+  targets   Target[]
+  scans     Scan[]
+  vulnerabilities Vulnerability[]
+  apiKeys   ApiKey[]
+  integrations Integration[]
+  auditLogs AuditLog[]
+}
+
+model OrgMember {
+  id     String  @id @default(uuid())
+  role   Role    @default(DEVELOPER)
+  userId String
+  orgId  String
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, orgId])
+}
+
+enum Plan {
+  STARTUP
+  GROWTH
+  ENTERPRISE
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  SECURITY_LEAD
+  DEVELOPER
+  VIEWER
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?
+  firstName     String?
+  lastName      String?
+  avatarUrl     String?
+  emailVerified Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  githubId      String?   @unique
+  githubToken   String?
+
+  memberships   OrgMember[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  name      String
+  keyHash   String   @unique
+  prefix    String   // first 8 chars for display
+  orgId     String
+  createdBy String
+  lastUsedAt DateTime?
+  expiresAt DateTime?
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+// ─── Targets (Attack Surface) ────────────────────────────────────────────────
+
+model Target {
+  id          String       @id @default(uuid())
+  orgId       String
+  name        String
+  type        TargetType
+  value       String       // domain, URL, repo path
+  environment Environment  @default(PRODUCTION)
+  verified    Boolean      @default(false)
+  verifiedAt  DateTime?
+  metadata    Json?        // extra config (headers, auth, etc.)
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  scans Scan[]
+  vulnerabilities Vulnerability[]
+
+  @@unique([orgId, value])
+  @@index([orgId, active])
+}
+
+enum TargetType {
+  WEB_APPLICATION
+  API_ENDPOINT
+  SOURCE_CODE
+  CLOUD_INFRASTRUCTURE
+}
+
+enum Environment {
+  PRODUCTION
+  STAGING
+  DEVELOPMENT
+}
+
+// ─── Scans ───────────────────────────────────────────────────────────────────
+
+model Scan {
+  id          String     @id @default(uuid())
+  orgId       String
+  targetId    String
+  status      ScanStatus @default(QUEUED)
+  scanType    ScanType   @default(FULL)
+  progress    Int        @default(0) // 0-100
+  findingsCount Int      @default(0)
+  config      Json?      // scan configuration
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  target Target       @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  vulnerabilities Vulnerability[]
+
+  @@index([orgId, status])
+  @@index([targetId])
+}
+
+enum ScanStatus {
+  QUEUED
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ScanType {
+  FULL
+  OWASP_TOP_10
+  API_SECURITY
+  SOURCE_CODE
+  CUSTOM
+}
+
+// ─── Vulnerabilities ─────────────────────────────────────────────────────────
+
+model Vulnerability {
+  id          String      @id @default(uuid())
+  orgId       String
+  targetId    String
+  scanId      String?
+  title       String
+  description String
+  severity    Severity
+  cvss        Float?
+  status      VulnStatus  @default(OPEN)
+  category    String      // OWASP category
+  cwe         String?     // CWE ID
+  owasp       String?     // e.g. A03:2021
+  endpoint    String?     // affected URL/path
+  evidence    Json?       // request/response pairs
+  poc         String?     // proof of concept code/steps
+  falsePositive Boolean   @default(false)
+  verifiedAt  DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  target Target       @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  scan   Scan?        @relation(fields: [scanId], references: [id], onDelete: SetNull)
+
+  remediations Remediation[]
+  attackChainNodes AttackChainNode[]
+  complianceMappings ComplianceMapping[]
+
+  @@index([orgId, status])
+  @@index([targetId])
+  @@index([severity])
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum VulnStatus {
+  OPEN
+  IN_PROGRESS
+  REMEDIATION
+  VERIFIED_FIXED
+  ACCEPTED_RISK
+  FALSE_POSITIVE
+}
+
+// ─── Attack Chains ───────────────────────────────────────────────────────────
+
+model AttackChain {
+  id          String   @id @default(uuid())
+  orgId       String
+  name        String
+  description String
+  impact      String
+  finalSeverity Severity
+  aiAnalysis  String?  // LLM-generated explanation
+  status      AttackChainStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  nodes AttackChainNode[]
+
+  @@index([orgId])
+}
+
+model AttackChainNode {
+  id              String @id @default(uuid())
+  chainId         String
+  vulnerabilityId String
+  position        Int    // order in the chain
+  transitionNote  String? // how this leads to next
+
+  chain         AttackChain   @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  vulnerability Vulnerability @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([chainId, position])
+  @@index([vulnerabilityId])
+}
+
+enum AttackChainStatus {
+  ACTIVE
+  RESOLVED
+  ACCEPTED_RISK
+}
+
+// ─── Remediations (PRs) ─────────────────────────────────────────────────────
+
+model Remediation {
+  id              String            @id @default(uuid())
+  vulnerabilityId String
+  status          RemediationStatus @default(GENERATING)
+  prUrl           String?
+  prNumber        Int?
+  repo            String?           // org/repo
+  branch          String?
+  patch           String?           // the generated code diff
+  description     String?           // PR description
+  linesAdded      Int?
+  linesRemoved    Int?
+  mergedAt        DateTime?
+  verifiedFixed   Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  vulnerability Vulnerability @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+
+  @@index([vulnerabilityId])
+  @@index([status])
+}
+
+enum RemediationStatus {
+  GENERATING
+  PR_OPEN
+  IN_REVIEW
+  CHANGES_REQUESTED
+  MERGED
+  CLOSED
+  FAILED
+}
+
+// ─── Compliance ──────────────────────────────────────────────────────────────
+
+model ComplianceFramework {
+  id       String @id @default(uuid())
+  name     String @unique // "SOC 2 Type II", "PCI-DSS v4.0", "HIPAA"
+  version  String?
+
+  controls ComplianceControl[]
+}
+
+model ComplianceControl {
+  id          String @id @default(uuid())
+  frameworkId String
+  controlId   String // "CC6.1", "Req-6.4"
+  name        String
+  description String?
+
+  framework ComplianceFramework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  mappings  ComplianceMapping[]
+
+  @@unique([frameworkId, controlId])
+}
+
+model ComplianceMapping {
+  id              String @id @default(uuid())
+  controlId       String
+  vulnerabilityId String
+  status          ComplianceStatus @default(FAILING)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  control       ComplianceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  vulnerability Vulnerability     @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([controlId, vulnerabilityId])
+}
+
+enum ComplianceStatus {
+  PASSING
+  FAILING
+  WARNING
+  NOT_APPLICABLE
+}
+
+// ─── Integrations ────────────────────────────────────────────────────────────
+
+model Integration {
+  id       String          @id @default(uuid())
+  orgId    String
+  type     IntegrationType
+  config   Json            // encrypted credentials/webhooks
+  active   Boolean         @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, type])
+}
+
+enum IntegrationType {
+  GITHUB
+  GITLAB
+  SLACK
+  JIRA
+  LINEAR
+  PAGERDUTY
+  WEBHOOK
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  orgId     String
+  userId    String?
+  type      NotificationType
+  title     String
+  body      String?
+  metadata  Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([orgId, read])
+  @@index([userId, read])
+}
+
+enum NotificationType {
+  VULN_FOUND
+  SCAN_COMPLETE
+  PR_OPENED
+  PR_MERGED
+  ATTACK_CHAIN
+  COMPLIANCE_ALERT
+  SYSTEM
+}
+
+// ─── Audit Log ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  orgId     String
+  userId    String?
+  action    String   // "scan.created", "vuln.status_changed", "target.added"
+  resource  String   // "scan", "vulnerability", "target"
+  resourceId String?
+  metadata  Json?    // before/after values
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([resource, resourceId])
+}
