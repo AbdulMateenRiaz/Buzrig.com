@@ -9,21 +9,29 @@ import { executeScan } from '../scanner/scan-executor.js'
 
 // ─── Queue Definitions ───────────────────────────────────────────────────────
 
-const connection = { host: 'localhost', port: 6379 }
+const redisAvailable = !!env.REDIS_URL && env.REDIS_URL.length > 0
 
-try {
-  const url = new URL(env.REDIS_URL)
-  connection.host = url.hostname
-  connection.port = parseInt(url.port) || 6379
-} catch {
-  // keep defaults
+let connection: { host: string; port: number; password?: string; tls?: object } | undefined
+
+if (redisAvailable) {
+  try {
+    const url = new URL(env.REDIS_URL)
+    connection = {
+      host: url.hostname,
+      port: parseInt(url.port) || 6379,
+      ...(url.password && { password: url.password }),
+      ...(url.protocol === 'rediss:' && { tls: {} }),
+    }
+  } catch {
+    logger.warn('Invalid REDIS_URL, running without job queue')
+  }
 }
 
-export const scanQueue = new Queue('scan', { connection })
-export const remediationQueue = new Queue('remediation', { connection })
-export const attackChainQueue = new Queue('attack-chain', { connection })
-export const pocQueue = new Queue('poc', { connection })
-export const githubQueue = new Queue('github', { connection })
+export const scanQueue = connection ? new Queue('scan', { connection }) : null
+export const remediationQueue = connection ? new Queue('remediation', { connection }) : null
+export const attackChainQueue = connection ? new Queue('attack-chain', { connection }) : null
+export const pocQueue = connection ? new Queue('poc', { connection }) : null
+export const githubQueue = connection ? new Queue('github', { connection }) : null
 
 // ─── Workers ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +46,11 @@ let githubWorker: Worker | null = null
  * Each worker processes jobs from its respective queue.
  */
 export function startWorkers() {
+  if (!connection) {
+    logger.warn('⚠️  Redis not configured — background workers disabled. Scans and LLM jobs will run inline.')
+    return
+  }
+
   // Scan execution worker
   scanWorker = new Worker(
     'scan',
@@ -46,7 +59,7 @@ export function startWorkers() {
       await executeScan(job.data.scanId)
     },
     {
-      connection,
+      connection: connection!,
       concurrency: 5,
     }
   )
@@ -67,7 +80,7 @@ export function startWorkers() {
       await generateRemediation(job.data.remediationId)
     },
     {
-      connection,
+      connection: connection!,
       concurrency: 3,
       limiter: { max: 10, duration: 60_000 },
     }
@@ -89,7 +102,7 @@ export function startWorkers() {
       await analyzeAttackChains(job.data.orgId)
     },
     {
-      connection,
+      connection: connection!,
       concurrency: 2,
       limiter: { max: 5, duration: 60_000 },
     }
@@ -107,7 +120,7 @@ export function startWorkers() {
       await generatePoC(job.data.vulnerabilityId)
     },
     {
-      connection,
+      connection: connection!,
       concurrency: 3,
       limiter: { max: 10, duration: 60_000 },
     }
@@ -125,7 +138,7 @@ export function startWorkers() {
       await createGitHubPR(job.data)
     },
     {
-      connection,
+      connection: connection!,
       concurrency: 2,
       limiter: { max: 30, duration: 60_000 },
     }
@@ -155,6 +168,11 @@ export async function stopWorkers() {
 // ─── Helper: enqueue jobs ────────────────────────────────────────────────────
 
 export async function enqueueScan(scanId: string) {
+  if (!scanQueue) {
+    logger.info({ scanId }, 'No Redis — running scan inline')
+    await executeScan(scanId)
+    return
+  }
   await scanQueue.add('execute', { scanId }, {
     attempts: 2,
     backoff: { type: 'exponential', delay: 10000 },
@@ -164,6 +182,11 @@ export async function enqueueScan(scanId: string) {
 }
 
 export async function enqueueRemediation(remediationId: string) {
+  if (!remediationQueue) {
+    logger.info({ remediationId }, 'No Redis — running remediation inline')
+    await generateRemediation(remediationId)
+    return
+  }
   await remediationQueue.add('generate', { remediationId }, {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5000 },
@@ -173,16 +196,23 @@ export async function enqueueRemediation(remediationId: string) {
 }
 
 export async function enqueueAttackChainAnalysis(orgId: string) {
+  if (!attackChainQueue) {
+    await analyzeAttackChains(orgId)
+    return
+  }
   await attackChainQueue.add('analyze', { orgId }, {
     attempts: 2,
     backoff: { type: 'fixed', delay: 10000 },
     removeOnComplete: 50,
-    // Deduplicate: only one analysis per org at a time
     jobId: `attack-chain-${orgId}`,
   })
 }
 
 export async function enqueuePoCGeneration(vulnerabilityId: string) {
+  if (!pocQueue) {
+    await generatePoC(vulnerabilityId)
+    return
+  }
   await pocQueue.add('generate', { vulnerabilityId }, {
     attempts: 2,
     backoff: { type: 'exponential', delay: 5000 },
@@ -191,6 +221,10 @@ export async function enqueuePoCGeneration(vulnerabilityId: string) {
 }
 
 export async function enqueueGitHubPR(remediationId: string, userId: string) {
+  if (!githubQueue) {
+    await createGitHubPR({ remediationId, userId })
+    return
+  }
   await githubQueue.add('create-pr', { remediationId, userId }, {
     attempts: 3,
     backoff: { type: 'exponential', delay: 3000 },
