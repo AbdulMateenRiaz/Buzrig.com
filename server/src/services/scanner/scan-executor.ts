@@ -131,7 +131,7 @@ export async function executeScan(scanId: string): Promise<void> {
   }
 
   // Store all findings in the database
-  const createdVulns = []
+  const createdVulns: Array<{ id: string; severity: string; poc: string | null }> = []
   for (const finding of findings) {
     try {
       const vuln = await prisma.vulnerability.create({

@@ -87,7 +87,7 @@ export async function probeEndpoint(
   payloads: Array<{ payload: string; description: string }>,
   options: HttpRequestOptions = {}
 ): Promise<Array<{ payload: string; description: string; response: HttpResponse; suspicious: boolean }>> {
-  const results = []
+  const results: Array<{ payload: string; description: string; response: HttpResponse; suspicious: boolean }> = []
 
   // First, get baseline response
   const baseline = await httpRequest(`${baseUrl}${path}`, options)
