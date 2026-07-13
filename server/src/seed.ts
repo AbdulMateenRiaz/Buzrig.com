@@ -29,7 +29,7 @@ async function main() {
   const passwordHash = await hashPassword('Demo@1234')
   const user = await prisma.user.create({
     data: {
-      email: 'demo@penagent.io',
+      email: 'demo@buzrig.com',
       passwordHash,
       firstName: 'Alex',
       lastName: 'Chen',
@@ -135,7 +135,7 @@ async function main() {
   })
 
   console.log('✅ Seed complete')
-  console.log(`   User: demo@penagent.io / Demo@1234`)
+  console.log(`   User: demo@buzrig.com / Demo@1234`)
   console.log(`   Org: ${org.name} (${org.slug})`)
 }
 

@@ -105,7 +105,7 @@ async function start() {
     const app = await buildApp()
 
     await app.listen({ port: env.PORT, host: '0.0.0.0' })
-    logger.info(`🚀 PenAgent API running on port ${env.PORT} (${env.NODE_ENV})`)
+    logger.info(`🚀 Buzrig API running on port ${env.PORT} (${env.NODE_ENV})`)
   } catch (error) {
     logger.error(error)
     process.exit(1)

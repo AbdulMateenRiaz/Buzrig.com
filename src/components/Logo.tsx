@@ -45,7 +45,7 @@ export default function Logo({ size = 'md', showText = true }: LogoProps) {
       </div>
       {showText && (
         <span className={`${d.text} font-bold tracking-tight text-surface-900`}>
-          PENAGENT
+          BUZRIG
         </span>
       )}
     </div>

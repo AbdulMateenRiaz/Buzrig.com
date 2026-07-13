@@ -49,7 +49,7 @@ export async function websocketRoutes(app: FastifyInstance) {
     // Send welcome
     socket.send(JSON.stringify({
       type: 'connected',
-      data: { message: 'Connected to PenAgent real-time feed', orgId },
+      data: { message: 'Connected to Buzrig real-time feed', orgId },
     }))
 
     // Handle ping/pong for keepalive

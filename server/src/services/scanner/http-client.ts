@@ -27,7 +27,7 @@ export async function httpRequest(
     const response = await fetch(url, {
       method,
       headers: {
-        'User-Agent': 'PenAgent-Scanner/1.0 (Security Testing)',
+        'User-Agent': 'Buzrig-Scanner/1.0 (Security Testing)',
         ...headers,
       },
       body: body || undefined,

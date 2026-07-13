@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const lines = [
-  { text: '$ penagent scan --target api.acme.com', type: 'command' as const, delay: 0 },
+  { text: '$ buzrig scan --target api.acme.com', type: 'command' as const, delay: 0 },
   { text: '[14:32:01] Scanning 47 endpoints...', type: 'info' as const, delay: 800 },
   { text: '[14:32:14] Testing /api/users/search for injection flaws', type: 'info' as const, delay: 1600 },
   { text: '[14:32:18] ⚠ SQL Injection found — CVSS 9.8', type: 'warning' as const, delay: 2400 },
@@ -42,7 +42,7 @@ export default function AnimatedTerminal() {
           <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
         </div>
-        <span className="text-[11px] text-surface-400 ml-2 font-mono">penagent — api.acme.com</span>
+        <span className="text-[11px] text-surface-400 ml-2 font-mono">buzrig — api.acme.com</span>
       </div>
       {/* Content */}
       <div className="p-4 font-mono text-[12px] leading-relaxed h-[240px] overflow-hidden">

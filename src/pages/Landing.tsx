@@ -85,7 +85,7 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="mt-6 max-w-md text-base text-surface-500 leading-relaxed">
-                PenAgent continuously discovers vulnerabilities, verifies them with proof-of-concept exploits, and opens pull requests with the fix.
+                Buzrig continuously discovers vulnerabilities, verifies them with proof-of-concept exploits, and opens pull requests with the fix.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <Link to="/signup" className="btn-primary px-6 py-3 text-sm">
@@ -176,7 +176,7 @@ export default function Landing() {
       <section id="comparison" className="py-28 px-6 bg-surface-50 border-y border-surface-200">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <p className="text-xs font-semibold text-brand-500 uppercase tracking-widest mb-3">Why PenAgent</p>
+            <p className="text-xs font-semibold text-brand-500 uppercase tracking-widest mb-3">Why Buzrig</p>
             <h2 className="text-3xl font-bold text-surface-900">How we compare</h2>
             <p className="mt-3 text-sm text-surface-500">The differentiation is clear in 10 seconds.</p>
           </div>
@@ -279,7 +279,7 @@ export default function Landing() {
               <a href="#" className="hover:text-surface-600 transition-colors">Status</a>
               <a href="#" className="hover:text-surface-600 transition-colors">Docs</a>
             </div>
-            <p className="text-xs text-surface-400">© 2024 PenAgent Inc.</p>
+            <p className="text-xs text-surface-400">© 2024 Buzrig Inc.</p>
           </div>
         </div>
       </footer>

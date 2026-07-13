@@ -125,7 +125,7 @@ async function testPasswordPolicy(baseUrl: string, report: (f: Finding) => void)
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'weak-test-penagent@test.com',
+        email: 'weak-test-buzrig@test.com',
         password: '123', // extremely weak
         firstName: 'Test',
         lastName: 'User',
