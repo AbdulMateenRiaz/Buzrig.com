@@ -19,9 +19,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
     logger.info({
       to: options.to,
       subject: options.subject,
-      note: 'Email not sent — RESEND_API_KEY not configured. Email content logged below.',
+      htmlBody: options.html,
+      note: 'Email not sent — RESEND_API_KEY not configured.',
     }, 'Email (dev mode)')
-    logger.info(options.html, 'Email HTML body')
     return true // pretend it sent successfully in dev
   }
 
