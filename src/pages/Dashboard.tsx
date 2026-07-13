@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react'
 import { Bug, GitPullRequest, AlertTriangle, Clock, TrendingDown, TrendingUp } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import SecurityGauge from '../components/SecurityGauge'
 import ActivityFeed from '../components/ActivityFeed'
+import { api } from '../lib/api'
 
-const trendData = [
+// Mock data as fallback
+const mockTrendData = [
   { date: 'Jan', critical: 8, high: 12, medium: 18 },
   { date: 'Feb', critical: 6, high: 14, medium: 15 },
   { date: 'Mar', critical: 9, high: 11, medium: 20 },
@@ -12,7 +15,7 @@ const trendData = [
   { date: 'Jun', critical: 2, high: 5, medium: 10 },
 ]
 
-const recentFindings = [
+const mockFindings = [
   { id: 'VLN-089', title: 'SQL Injection in /api/users/search', severity: 'critical', target: 'api.acme.com', found: '2h ago', status: 'PR Open' },
   { id: 'VLN-088', title: 'IDOR on invoice download', severity: 'high', target: 'app.acme.com', found: '5h ago', status: 'Merged' },
   { id: 'VLN-087', title: 'Stored XSS via display name', severity: 'high', target: 'app.acme.com', found: '8h ago', status: 'Review' },
@@ -20,40 +23,62 @@ const recentFindings = [
 ]
 
 function getSeverityBadge(severity: string) {
-  const map: Record<string, string> = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }
+  const map: Record<string, string> = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low', CRITICAL: 'badge-critical', HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' }
   return map[severity] || 'badge-info'
 }
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const hours = Math.floor(diff / 3600000)
+  if (hours < 1) return 'just now'
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
 export default function Dashboard() {
+  const [dashData, setDashData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.getDashboard().then((res) => {
+      if (res.success && res.data) setDashData(res.data)
+      setLoading(false)
+    })
+  }, [])
+
+  const score = dashData?.securityScore ?? 82
+  const openVulns = dashData?.openVulnerabilities ?? 23
+  const mergedPRs = dashData?.mergedPRs ?? 47
+  const attackChains = dashData?.activeAttackChains ?? 5
+  const recentVulns = dashData?.recentVulnerabilities ?? mockFindings
+
   return (
     <div className="space-y-8 max-w-6xl">
-      {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-surface-900">Dashboard</h1>
-        <p className="text-sm text-surface-500 mt-0.5">Last scan completed 12 minutes ago</p>
+        <p className="text-sm text-surface-500 mt-0.5">
+          {loading ? 'Loading...' : 'Real-time security overview'}
+        </p>
       </div>
 
       {/* Hero: Security Score + Stats */}
       <div className="card-static">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-          {/* Gauge */}
           <div className="flex flex-col items-center">
             <p className="text-xs font-medium text-surface-500 uppercase tracking-wider mb-4">Security Score</p>
-            <SecurityGauge score={82} />
+            <SecurityGauge score={score} />
           </div>
 
-          {/* Divider */}
           <div className="hidden lg:block w-px h-48 bg-surface-200" />
           <div className="lg:hidden w-full h-px bg-surface-200" />
 
-          {/* Supporting Stats */}
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
                 <Bug className="h-4 w-4 text-brand-500" />
                 <span className="text-xs text-surface-500">Open Vulnerabilities</span>
               </div>
-              <p className="text-3xl font-bold text-surface-900">23</p>
+              <p className="text-3xl font-bold text-surface-900">{openVulns}</p>
               <span className="text-[11px] font-medium text-accent-500 flex items-center justify-center lg:justify-start gap-0.5 mt-1">
                 <TrendingDown className="h-3 w-3" />-12% this month
               </span>
@@ -64,7 +89,7 @@ export default function Dashboard() {
                 <GitPullRequest className="h-4 w-4 text-accent-500" />
                 <span className="text-xs text-surface-500">PRs Merged</span>
               </div>
-              <p className="text-3xl font-bold text-surface-900">47</p>
+              <p className="text-3xl font-bold text-surface-900">{mergedPRs}</p>
               <span className="text-[11px] font-medium text-accent-500 flex items-center justify-center lg:justify-start gap-0.5 mt-1">
                 <TrendingUp className="h-3 w-3" />+8 this week
               </span>
@@ -75,7 +100,7 @@ export default function Dashboard() {
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                 <span className="text-xs text-surface-500">Attack Chains</span>
               </div>
-              <p className="text-3xl font-bold text-surface-900">5</p>
+              <p className="text-3xl font-bold text-surface-900">{attackChains}</p>
               <span className="text-[11px] font-medium text-brand-500 flex items-center justify-center lg:justify-start gap-0.5 mt-1">
                 <TrendingUp className="h-3 w-3" />+2 new
               </span>
@@ -88,7 +113,7 @@ export default function Dashboard() {
       <div className="card-static">
         <h3 className="text-xs font-medium text-surface-500 uppercase tracking-wider mb-6">Vulnerability Trend</h3>
         <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={trendData}>
+          <AreaChart data={mockTrendData}>
             <defs>
               <linearGradient id="critGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1} />
@@ -108,19 +133,13 @@ export default function Dashboard() {
           </AreaChart>
         </ResponsiveContainer>
         <div className="flex items-center gap-6 mt-4 justify-center">
-          <div className="flex items-center gap-2 text-[11px] text-surface-500">
-            <div className="h-2 w-4 rounded-full bg-red-500" />Critical
-          </div>
-          <div className="flex items-center gap-2 text-[11px] text-surface-500">
-            <div className="h-2 w-4 rounded-full bg-orange-500" />High
-          </div>
-          <div className="flex items-center gap-2 text-[11px] text-surface-500">
-            <div className="h-0.5 w-4 border-t-2 border-dashed border-amber-500" />Medium
-          </div>
+          <div className="flex items-center gap-2 text-[11px] text-surface-500"><div className="h-2 w-4 rounded-full bg-red-500" />Critical</div>
+          <div className="flex items-center gap-2 text-[11px] text-surface-500"><div className="h-2 w-4 rounded-full bg-orange-500" />High</div>
+          <div className="flex items-center gap-2 text-[11px] text-surface-500"><div className="h-0.5 w-4 border-t-2 border-dashed border-amber-500" />Medium</div>
         </div>
       </div>
 
-      {/* Activity Feed + Findings side by side */}
+      {/* Activity + Findings */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <ActivityFeed />
@@ -138,19 +157,19 @@ export default function Dashboard() {
                   <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Finding</th>
                   <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Severity</th>
                   <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Target</th>
-                  <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Found</th>
-                  <th className="pb-3 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Status</th>
+                  <th className="pb-3 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Found</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100">
-                {recentFindings.map((f) => (
-                  <tr key={f.id} className="hover:bg-surface-50 transition-colors">
-                    <td className="py-3.5 pr-4 font-mono text-[11px] text-surface-400">{f.id}</td>
+                {(recentVulns || []).slice(0, 5).map((f: any, i: number) => (
+                  <tr key={f.id || i} className="hover:bg-surface-50 transition-colors">
+                    <td className="py-3.5 pr-4 font-mono text-[11px] text-surface-400">{f.id?.slice(0, 8) || `VLN-${i}`}</td>
                     <td className="py-3.5 pr-4 text-sm text-surface-700">{f.title}</td>
-                    <td className="py-3.5 pr-4"><span className={getSeverityBadge(f.severity)}>{f.severity}</span></td>
-                    <td className="py-3.5 pr-4 font-mono text-[11px] text-surface-400">{f.target}</td>
-                    <td className="py-3.5 pr-4 text-[11px] text-surface-400"><span className="flex items-center gap-1"><Clock className="h-3 w-3" />{f.found}</span></td>
-                    <td className="py-3.5"><span className="badge-info">{f.status}</span></td>
+                    <td className="py-3.5 pr-4"><span className={getSeverityBadge(f.severity)}>{(f.severity || '').toLowerCase()}</span></td>
+                    <td className="py-3.5 pr-4 font-mono text-[11px] text-surface-400">{f.target?.value || f.target || ''}</td>
+                    <td className="py-3.5 text-[11px] text-surface-400">
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{f.createdAt ? timeAgo(f.createdAt) : f.found || ''}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

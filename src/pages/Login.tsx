@@ -1,8 +1,32 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Github } from 'lucide-react'
 import Logo from '../components/Logo'
+import { useAuth } from '../lib/auth'
 
 export default function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    const result = await login(email, password)
+    setLoading(false)
+
+    if (result.success) {
+      navigate('/app/dashboard')
+    } else {
+      setError(result.error || 'Login failed')
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-50 px-6 py-12">
       <div className="w-full max-w-sm">
@@ -28,19 +52,43 @@ export default function Login() {
             </div>
           </div>
 
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-surface-600 mb-1.5">Email</label>
-              <input id="email" type="email" placeholder="you@company.com" className="input-field" />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="input-field"
+                required
+              />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="password" className="block text-xs font-medium text-surface-600">Password</label>
                 <a href="#" className="text-xs text-brand-500 hover:text-brand-600 transition-colors">Forgot?</a>
               </div>
-              <input id="password" type="password" placeholder="••••••••" className="input-field" />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="input-field"
+                required
+              />
             </div>
-            <button type="submit" className="btn-primary w-full mt-2">Sign In</button>
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 disabled:opacity-50">
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
           </form>
         </div>
 

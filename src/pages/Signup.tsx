@@ -1,8 +1,34 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Shield, Github, CheckCircle } from 'lucide-react'
 import Logo from '../components/Logo'
+import { useAuth } from '../lib/auth'
 
 export default function Signup() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signup } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    const result = await signup({ email, password, firstName, lastName })
+    setLoading(false)
+
+    if (result.success) {
+      navigate('/app/dashboard')
+    } else {
+      setError(result.error || 'Signup failed')
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-white">
       {/* Left */}
@@ -53,26 +79,34 @@ export default function Signup() {
               </div>
             </div>
 
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            {error && (
+              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="firstName" className="block text-xs font-medium text-surface-600 mb-1.5">First name</label>
-                  <input id="firstName" type="text" placeholder="Alex" className="input-field" />
+                  <input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Alex" className="input-field" required />
                 </div>
                 <div>
                   <label htmlFor="lastName" className="block text-xs font-medium text-surface-600 mb-1.5">Last name</label>
-                  <input id="lastName" type="text" placeholder="Chen" className="input-field" />
+                  <input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Chen" className="input-field" required />
                 </div>
               </div>
               <div>
                 <label htmlFor="email" className="block text-xs font-medium text-surface-600 mb-1.5">Work email</label>
-                <input id="email" type="email" placeholder="alex@company.com" className="input-field" />
+                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="alex@company.com" className="input-field" required />
               </div>
               <div>
                 <label htmlFor="password" className="block text-xs font-medium text-surface-600 mb-1.5">Password</label>
-                <input id="password" type="password" placeholder="Min. 8 characters" className="input-field" />
+                <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 8 characters" className="input-field" required />
               </div>
-              <button type="submit" className="btn-primary w-full mt-2">Create Account</button>
+              <button type="submit" disabled={loading} className="btn-primary w-full mt-2 disabled:opacity-50">
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
             </form>
 
             <p className="mt-4 text-center text-[11px] text-surface-400">
