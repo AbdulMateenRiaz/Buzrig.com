@@ -38,10 +38,10 @@ export default function Login() {
           <h1 className="text-lg font-semibold text-surface-900 text-center mb-1">Welcome back</h1>
           <p className="text-sm text-surface-500 text-center mb-8">Sign in to your account</p>
 
-          <button className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-surface-300 bg-white py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors mb-6">
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/github`} className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-surface-300 bg-white py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors mb-6">
             <Github className="h-4 w-4" />
             Continue with GitHub
-          </button>
+          </a>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -74,7 +74,7 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="password" className="block text-xs font-medium text-surface-600">Password</label>
-                <a href="#" className="text-xs text-brand-500 hover:text-brand-600 transition-colors">Forgot?</a>
+                <Link to="/forgot-password" className="text-xs text-brand-500 hover:text-brand-600 transition-colors">Forgot?</Link>
               </div>
               <input
                 id="password"

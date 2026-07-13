@@ -169,7 +169,7 @@ export async function oauthRoutes(app: FastifyInstance) {
     })
 
     // Redirect to frontend with tokens
-    const redirectUrl = new URL('/app/dashboard', env.CLIENT_URL)
+    const redirectUrl = new URL('/auth/callback', env.CLIENT_URL)
     redirectUrl.searchParams.set('accessToken', accessToken)
     redirectUrl.searchParams.set('refreshToken', refreshToken)
 

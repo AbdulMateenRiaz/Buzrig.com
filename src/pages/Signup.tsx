@@ -65,10 +65,10 @@ export default function Signup() {
             <h1 className="text-lg font-semibold text-surface-900 text-center mb-1">Create account</h1>
             <p className="text-sm text-surface-500 text-center mb-8">14-day free trial</p>
 
-            <button className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-surface-300 bg-white py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors mb-6">
+            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/github`} className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-surface-300 bg-white py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors mb-6">
               <Github className="h-4 w-4" />
               Sign up with GitHub
-            </button>
+            </a>
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">

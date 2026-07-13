@@ -19,6 +19,7 @@ import { auditLogRoutes } from './routes/audit-logs.js'
 import { oauthRoutes } from './routes/oauth.js'
 import { websocketRoutes } from './routes/websocket.js'
 import { actionRoutes } from './routes/actions.js'
+import { passwordResetRoutes } from './routes/password-reset.js'
 import { logger } from './lib/logger.js'
 
 async function buildApp() {
@@ -69,6 +70,7 @@ async function buildApp() {
 
   await app.register(authRoutes)
   await app.register(oauthRoutes)
+  await app.register(passwordResetRoutes)
   await app.register(targetRoutes)
   await app.register(scanRoutes)
   await app.register(vulnerabilityRoutes)
