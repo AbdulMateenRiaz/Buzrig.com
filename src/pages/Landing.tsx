@@ -217,9 +217,9 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: 'Startup', price: '$2,000', features: ['5 targets', 'OWASP Top 10', 'Auto-fix PRs', 'SOC 2 reports'], highlighted: false },
-              { name: 'Growth', price: '$7,500', features: ['25 targets', 'Attack-chain AI', 'Continuous scanning', 'Multi-compliance', 'Priority support'], highlighted: true },
-              { name: 'Enterprise', price: 'Custom', features: ['Unlimited targets', 'Custom frameworks', 'Dedicated researcher', 'On-prem deploy', 'SLA guarantees'], highlighted: false },
+              { name: 'Starter', price: '$499', features: ['3 targets', 'Weekly scans', 'Auto-fix PRs', 'Email alerts', 'SOC 2 reporting'], highlighted: false },
+              { name: 'Professional', price: '$1,499', features: ['15 targets', 'Daily scans', 'Attack-chain AI', 'Multi-compliance', 'Slack + Jira integration', 'Priority support'], highlighted: true },
+              { name: 'Enterprise', price: 'Custom', features: ['Unlimited targets', 'Continuous scanning', 'Custom exploit frameworks', 'Dedicated security analyst', 'On-prem deployment', 'SLA guarantees'], highlighted: false },
             ].map((plan) => (
               <div key={plan.name} className={`rounded-xl border p-8 ${plan.highlighted ? 'border-brand-500 bg-white shadow-lg ring-1 ring-brand-100' : 'border-surface-200 bg-white'}`}>
                 {plan.highlighted && <span className="inline-block mb-3 text-[10px] font-bold uppercase tracking-widest text-brand-500">Most Popular</span>}
