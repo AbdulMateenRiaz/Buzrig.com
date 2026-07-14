@@ -24,8 +24,6 @@ const features = [
   { icon: Lock, title: 'Compliance Ready', description: 'Findings mapped to SOC 2, HIPAA, and PCI-DSS. Audit-ready reports generated instantly.' },
 ]
 
-const logos = ['Acme Corp', 'NovaPay', 'HealthSync', 'CloudBase', 'DataVault']
-
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -43,7 +41,7 @@ export default function Landing() {
           </div>
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login" className="text-sm text-surface-600 hover:text-surface-900 transition-colors">Log In</Link>
-            <Link to="/signup" className="btn-primary py-2 px-4 text-xs">Get a Demo</Link>
+            <Link to="/demo" className="btn-primary py-2 px-4 text-xs">Get a Demo</Link>
           </div>
           {/* Mobile menu button */}
           <button
@@ -62,7 +60,7 @@ export default function Landing() {
             <a href="#pricing" className="block text-sm text-surface-600 py-2">Pricing</a>
             <div className="pt-3 border-t border-surface-200 flex gap-3">
               <Link to="/login" className="btn-secondary flex-1 text-xs">Log In</Link>
-              <Link to="/signup" className="btn-primary flex-1 text-xs">Get a Demo</Link>
+              <Link to="/demo" className="btn-primary flex-1 text-xs">Get a Demo</Link>
             </div>
           </div>
         )}
@@ -108,19 +106,18 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Trust Logos */}
-      <section className="border-y border-surface-200 py-10 bg-surface-50">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <p className="text-[11px] font-medium text-surface-400 uppercase tracking-widest mb-6">
-            Trusted by security-conscious engineering teams
+      {/* Waitlist CTA */}
+      <section className="border-y border-surface-200 py-12 bg-surface-50">
+        <div className="mx-auto max-w-xl px-6 text-center">
+          <p className="text-xs font-medium text-surface-500 uppercase tracking-widest mb-3">
+            Early Access
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {logos.map((logo) => (
-              <span key={logo} className="text-sm font-semibold text-surface-300 tracking-wide">
-                {logo}
-              </span>
-            ))}
-          </div>
+          <h3 className="text-lg font-semibold text-surface-900 mb-2">Join 200+ teams on the waitlist</h3>
+          <p className="text-sm text-surface-500 mb-6">Get notified when we launch new features and invite-only access.</p>
+          <form className="flex gap-2 max-w-sm mx-auto" onSubmit={(e) => { e.preventDefault(); alert('Thanks! We\'ll be in touch.') }}>
+            <input type="email" placeholder="you@company.com" className="input-field flex-1" required />
+            <button type="submit" className="btn-primary text-xs whitespace-nowrap px-4">Join Waitlist</button>
+          </form>
         </div>
       </section>
 
@@ -273,11 +270,11 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <Logo size="sm" />
             <div className="flex items-center gap-6 text-xs text-surface-400">
-              <a href="#" className="hover:text-surface-600 transition-colors">Privacy</a>
-              <a href="#" className="hover:text-surface-600 transition-colors">Terms</a>
-              <a href="#" className="hover:text-surface-600 transition-colors">Security</a>
-              <a href="#" className="hover:text-surface-600 transition-colors">Status</a>
-              <a href="#" className="hover:text-surface-600 transition-colors">Docs</a>
+              <Link to="/privacy" className="hover:text-surface-600 transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-surface-600 transition-colors">Terms</Link>
+              <Link to="/security" className="hover:text-surface-600 transition-colors">Security</Link>
+              <Link to="/about" className="hover:text-surface-600 transition-colors">About</Link>
+              <Link to="/demo" className="hover:text-surface-600 transition-colors">Contact</Link>
             </div>
             <p className="text-xs text-surface-400">© 2024 Buzrig Inc.</p>
           </div>
