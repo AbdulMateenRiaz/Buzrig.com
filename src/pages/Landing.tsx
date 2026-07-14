@@ -18,7 +18,7 @@ import ComparisonTable from '../components/ComparisonTable'
 import CountUp from '../components/CountUp'
 
 const features = [
-  { icon: Brain, title: 'Attack-Chain Reasoning', description: 'Chains low-severity findings into critical exploits using multi-step reasoning — just like a senior researcher.' },
+  { icon: Brain, title: 'Attack-Chain Reasoning', description: 'Chains low-severity findings into critical exploits using multi-step reasoning, just like a senior researcher.' },
   { icon: GitPullRequest, title: 'Auto-Remediation PRs', description: 'Verified vulnerabilities come with production-ready code fixes submitted directly as pull requests.' },
   { icon: Shield, title: 'Continuous Testing', description: 'Every deployment triggers automated security validation. No more gaps between annual engagements.' },
   { icon: Lock, title: 'Compliance Ready', description: 'Findings mapped to SOC 2, HIPAA, and PCI-DSS. Audit-ready reports generated instantly.' },
@@ -233,9 +233,52 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <button className={`mt-8 w-full rounded-lg py-2.5 text-sm font-semibold transition-all ${plan.highlighted ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm' : 'border border-surface-300 text-surface-700 hover:bg-surface-100'}`}>
+                <Link to={plan.price === 'Custom' ? '/demo' : '/signup'} className={`mt-8 w-full rounded-lg py-2.5 text-sm font-semibold transition-all block text-center ${plan.highlighted ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm' : 'border border-surface-300 text-surface-700 hover:bg-surface-100'}`}>
                   {plan.price === 'Custom' ? 'Contact Sales' : 'Start Trial'}
-                </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-28 px-6">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold text-brand-500 uppercase tracking-widest mb-3">FAQ</p>
+            <h2 className="text-3xl font-bold text-surface-900">Common questions</h2>
+          </div>
+          <div className="space-y-6">
+            {[
+              {
+                q: 'How is Buzrig different from Nessus, Qualys, or other scanners?',
+                a: 'Traditional scanners find known CVEs and produce noisy reports with 30-60% false positive rates. Buzrig thinks like a human penetration tester - it chains vulnerabilities together, tests business logic, verifies every finding with a proof-of-concept, and submits the actual code fix as a pull request.',
+              },
+              {
+                q: 'Is it safe to run on production systems?',
+                a: 'Yes. Buzrig uses non-destructive testing techniques only. We never modify data, drop tables, or cause service disruption. All payloads are designed to prove exploitability without causing damage. We rate-limit requests to prevent any performance impact.',
+              },
+              {
+                q: 'How does the AI generate code fixes?',
+                a: 'When a vulnerability is verified, our AI analyzes the vulnerable code pattern, the exploit mechanism, and security best practices to generate a minimal, production-ready patch. It produces a complete pull request with explanation, risk assessment, and suggested test.',
+              },
+              {
+                q: 'What compliance frameworks do you support?',
+                a: 'We map findings to SOC 2 Type II, PCI-DSS v4.0, and HIPAA controls. Compliance reports are generated on demand and are designed to be audit-ready, accepted by major auditors.',
+              },
+              {
+                q: 'How long does the first scan take?',
+                a: 'Typically 1-4 hours depending on the size of your attack surface. You will receive findings in real-time as they are discovered - no waiting for the full scan to complete.',
+              },
+              {
+                q: 'Do I need to install anything?',
+                a: 'No. Buzrig is fully cloud-based and tests your applications externally, the same way an attacker would. For source code scanning, you connect your GitHub/GitLab repo via OAuth - no agents required.',
+              },
+            ].map((item) => (
+              <div key={item.q} className="rounded-xl border border-surface-200 bg-white p-6">
+                <h3 className="text-sm font-semibold text-surface-900 mb-2">{item.q}</h3>
+                <p className="text-sm text-surface-500 leading-relaxed">{item.a}</p>
               </div>
             ))}
           </div>
