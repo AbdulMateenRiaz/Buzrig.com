@@ -113,8 +113,8 @@ export default function Landing() {
             Early Access
           </p>
           <h3 className="text-lg font-semibold text-surface-900 mb-2">Join 200+ teams on the waitlist</h3>
-          <p className="text-sm text-surface-500 mb-6">Get notified when we launch new features and invite-only access.</p>
-          <form className="flex gap-2 max-w-sm mx-auto" onSubmit={(e) => { e.preventDefault(); alert('Thanks! We\'ll be in touch.') }}>
+          <p className="text-sm text-surface-500 mb-6">Get early access and be the first to try new features.</p>
+          <form className="flex gap-2 max-w-sm mx-auto" onSubmit={(e) => { e.preventDefault(); const btn = (e.target as HTMLFormElement).querySelector('button'); if(btn) btn.textContent = 'Added!'; }}>
             <input type="email" placeholder="you@company.com" className="input-field flex-1" required />
             <button type="submit" className="btn-primary text-xs whitespace-nowrap px-4">Join Waitlist</button>
           </form>

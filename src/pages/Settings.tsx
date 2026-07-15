@@ -1,85 +1,143 @@
-import { Globe, Key, Bell, Users, Webhook } from 'lucide-react'
+import { useState } from 'react'
+import { Globe, Key, Bell, Users, Webhook, Plus, Trash2, CheckCircle } from 'lucide-react'
+import { useAuth } from '../lib/auth'
 
 export default function Settings() {
+  const { user, org } = useAuth()
+  const [activeTab, setActiveTab] = useState('targets')
+
+  const tabs = [
+    { id: 'targets', label: 'Targets', icon: Globe },
+    { id: 'integrations', label: 'Integrations', icon: Webhook },
+    { id: 'team', label: 'Team', icon: Users },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'api', label: 'API Keys', icon: Key },
+  ]
+
   return (
     <div className="space-y-8 max-w-5xl">
+      {/* Header */}
       <div>
         <h1 className="text-lg font-semibold text-surface-900">Settings</h1>
-        <p className="text-xs text-surface-500 mt-0.5">Targets, integrations, and preferences</p>
+        <p className="text-xs text-surface-500 mt-0.5">
+          Manage your organization: <span className="font-medium text-surface-700">{org?.name || 'My Team'}</span>
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="card">
-          <div className="flex items-center gap-2.5 mb-5">
-            <Globe className="h-4 w-4 text-brand-500" />
-            <h3 className="text-sm font-medium text-surface-900">Attack Surface</h3>
-          </div>
-          <div className="space-y-2">
-            {['api.acme.com', 'app.acme.com', 'auth.acme.com'].map((t) => (
-              <div key={t} className="flex items-center justify-between rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5">
-                <span className="font-mono text-xs text-surface-700">{t}</span>
-                <span className="text-[10px] font-medium text-emerald-500 uppercase">Active</span>
-              </div>
-            ))}
-            <button className="w-full rounded-lg border border-dashed border-surface-300 py-2.5 text-xs text-surface-400 hover:text-surface-600 hover:border-surface-400 transition-colors">+ Add Target</button>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-surface-200 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-surface-500 hover:text-surface-700'
+            }`}
+          >
+            <tab.icon className="h-3.5 w-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="card">
-          <div className="flex items-center gap-2.5 mb-5">
-            <Webhook className="h-4 w-4 text-brand-500" />
-            <h3 className="text-sm font-medium text-surface-900">Integrations</h3>
-          </div>
-          <div className="space-y-2">
-            {[
-              { name: 'GitHub', connected: true },
-              { name: 'Slack', connected: true },
-              { name: 'Jira', connected: false },
-              { name: 'PagerDuty', connected: false },
-            ].map((i) => (
-              <div key={i.name} className="flex items-center justify-between rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5">
-                <span className="text-xs text-surface-700">{i.name}</span>
-                <span className={`text-[10px] font-medium uppercase ${i.connected ? 'text-emerald-500' : 'text-surface-400'}`}>
-                  {i.connected ? 'Connected' : 'Not connected'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center gap-2.5 mb-5">
-            <Key className="h-4 w-4 text-brand-500" />
-            <h3 className="text-sm font-medium text-surface-900">API Keys</h3>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5">
-              <div>
-                <p className="text-xs text-surface-700">Production Key</p>
-                <p className="font-mono text-[11px] text-surface-400">pk_live_••••••••3a9f</p>
-              </div>
-              <button className="text-[11px] text-brand-500 hover:text-brand-600 font-medium">Revoke</button>
-            </div>
-            <button className="w-full rounded-lg border border-dashed border-surface-300 py-2.5 text-xs text-surface-400 hover:text-surface-600 hover:border-surface-400 transition-colors">+ Generate Key</button>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center gap-2.5 mb-5">
-            <Bell className="h-4 w-4 text-brand-500" />
-            <h3 className="text-sm font-medium text-surface-900">Notifications</h3>
-          </div>
+      {/* Tab Content */}
+      <div className="page-enter">
+        {activeTab === 'targets' && (
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-surface-600">Add the domains, APIs, and repos you want to scan.</p>
+              <button className="btn-primary text-xs"><Plus className="h-3.5 w-3.5" />Add Target</button>
+            </div>
+            {['api.acme.com', 'app.acme.com', 'auth.acme.com'].map((t) => (
+              <div key={t} className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-5 py-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-surface-400" />
+                  <div>
+                    <p className="font-mono text-sm text-surface-900">{t}</p>
+                    <p className="text-[11px] text-surface-400">Web Application - Production</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-medium text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">Active</span>
+                  <button className="text-surface-300 hover:text-red-500 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'integrations' && (
+          <div className="space-y-4">
+            <p className="text-sm text-surface-600">Connect your tools to receive alerts and auto-create tickets.</p>
             {[
-              { label: 'Critical findings', sub: 'Immediate', on: true },
-              { label: 'High findings', sub: 'Within 1 hour', on: true },
-              { label: 'Remediation PRs', sub: 'On creation', on: true },
-              { label: 'Scan completions', sub: 'Summary', on: false },
-            ].map((n) => (
-              <div key={n.label} className="flex items-center justify-between">
+              { name: 'GitHub', desc: 'Auto-create PRs with fixes', connected: true },
+              { name: 'Slack', desc: 'Real-time vulnerability alerts', connected: true },
+              { name: 'Jira', desc: 'Create tickets for findings', connected: false },
+              { name: 'PagerDuty', desc: 'Critical finding on-call alerts', connected: false },
+            ].map((i) => (
+              <div key={i.name} className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-5 py-4 shadow-sm">
                 <div>
-                  <p className="text-xs text-surface-700">{n.label}</p>
-                  <p className="text-[11px] text-surface-400">{n.sub}</p>
+                  <p className="text-sm font-medium text-surface-900">{i.name}</p>
+                  <p className="text-[11px] text-surface-400">{i.desc}</p>
+                </div>
+                {i.connected ? (
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-500">
+                    <CheckCircle className="h-3.5 w-3.5" />Connected
+                  </span>
+                ) : (
+                  <button className="btn-secondary text-xs py-1.5 px-3">Connect</button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'team' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-surface-600">Manage who has access to your organization.</p>
+              <button className="btn-primary text-xs"><Plus className="h-3.5 w-3.5" />Invite Member</button>
+            </div>
+            <div className="rounded-xl border border-surface-200 bg-white shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-surface-100 bg-surface-50">
+                    <th className="text-left px-5 py-3 text-[10px] font-medium text-surface-500 uppercase tracking-wider">Member</th>
+                    <th className="text-left px-5 py-3 text-[10px] font-medium text-surface-500 uppercase tracking-wider">Role</th>
+                    <th className="text-left px-5 py-3 text-[10px] font-medium text-surface-500 uppercase tracking-wider">Last Active</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-100">
+                  <tr>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-surface-900">{user?.firstName} {user?.lastName}</p>
+                      <p className="text-[11px] text-surface-400">{user?.email}</p>
+                    </td>
+                    <td className="px-5 py-3"><span className="badge-info">Owner</span></td>
+                    <td className="px-5 py-3 text-xs text-surface-400">Now</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="space-y-4">
+            <p className="text-sm text-surface-600">Choose what alerts you receive and how.</p>
+            {[
+              { label: 'Critical vulnerabilities', desc: 'Get alerted immediately when critical findings are discovered', on: true },
+              { label: 'High vulnerabilities', desc: 'Alert within 1 hour of discovery', on: true },
+              { label: 'Remediation PRs', desc: 'Notify when a fix PR is auto-generated', on: true },
+              { label: 'Scan completions', desc: 'Summary email when a scan finishes', on: false },
+              { label: 'Weekly digest', desc: 'Weekly summary of security posture', on: false },
+            ].map((n) => (
+              <div key={n.label} className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-5 py-4 shadow-sm">
+                <div>
+                  <p className="text-sm font-medium text-surface-900">{n.label}</p>
+                  <p className="text-[11px] text-surface-400">{n.desc}</p>
                 </div>
                 <div className={`h-5 w-9 rounded-full transition-colors relative cursor-pointer ${n.on ? 'bg-brand-500' : 'bg-surface-300'}`}>
                   <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${n.on ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -87,38 +145,29 @@ export default function Settings() {
               </div>
             ))}
           </div>
-        </div>
+        )}
 
-        <div className="card lg:col-span-2">
-          <div className="flex items-center gap-2.5 mb-5">
-            <Users className="h-4 w-4 text-brand-500" />
-            <h3 className="text-sm font-medium text-surface-900">Team</h3>
+        {activeTab === 'api' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-surface-600">API keys for programmatic access to Buzrig.</p>
+              <button className="btn-primary text-xs"><Plus className="h-3.5 w-3.5" />Generate Key</button>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-5 py-4 shadow-sm">
+              <div>
+                <p className="text-sm font-medium text-surface-900">Production Key</p>
+                <p className="font-mono text-[11px] text-surface-400">pk_live_••••••••••••3a9f</p>
+                <p className="text-[10px] text-surface-400 mt-1">Created Jul 14, 2026</p>
+              </div>
+              <button className="text-[11px] text-red-500 hover:text-red-600 font-medium">Revoke</button>
+            </div>
+            <div className="rounded-xl border border-surface-200 bg-surface-50 p-5">
+              <p className="text-xs text-surface-500 leading-relaxed">
+                API keys give full access to your organization data. Keep them secret. Use environment variables, never commit to code.
+              </p>
+            </div>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-surface-200 text-left">
-                <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Name</th>
-                <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Email</th>
-                <th className="pb-3 pr-4 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Role</th>
-                <th className="pb-3 text-[10px] font-medium text-surface-400 uppercase tracking-wider">Last Active</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-100">
-              {[
-                { name: 'Alex Chen', email: 'alex@acme.com', role: 'Admin', active: 'Now' },
-                { name: 'Sarah Kim', email: 'sarah@acme.com', role: 'Security', active: '2h ago' },
-                { name: 'James Park', email: 'james@acme.com', role: 'Developer', active: '1d ago' },
-              ].map((m) => (
-                <tr key={m.email} className="hover:bg-surface-50">
-                  <td className="py-3 pr-4 text-sm text-surface-700">{m.name}</td>
-                  <td className="py-3 pr-4 text-xs text-surface-500">{m.email}</td>
-                  <td className="py-3 pr-4"><span className="badge-info">{m.role}</span></td>
-                  <td className="py-3 text-xs text-surface-400">{m.active}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        )}
       </div>
     </div>
   )
